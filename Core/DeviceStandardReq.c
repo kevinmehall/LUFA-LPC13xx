@@ -59,7 +59,6 @@ void USB_Device_ProcessControlRequest(void)
 	Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
 	Endpoint_prepare_read();
 	Endpoint_Read_buf(&USB_ControlRequest, sizeof(USB_ControlRequest));
-	Endpoint_complete_read();
 #endif
 
 	EVENT_USB_Device_ControlRequest();
@@ -129,9 +128,8 @@ static void USB_Device_SetAddress(void)
 	Endpoint_ClearSETUP();
 	
 	Endpoint_prepare_write(0);
-	
-	//Endpoint_ClearStatusStage();
 	Endpoint_complete_write();
+	//Endpoint_ClearStatusStage();
 
 	//while (!(Endpoint_IsINReady()));
 
@@ -197,7 +195,9 @@ static void USB_Device_SetConfiguration(void)
 
 	USB_ConfigurationNumber = (uint8_t)USB_ControlRequest.wValue;
 
-	Endpoint_ClearStatusStage();
+	//Endpoint_ClearStatusStage();
+	Endpoint_prepare_write(0);
+	Endpoint_complete_write();
 
 	if (USB_ConfigurationNumber)
 	  USB_DeviceState = DEVICE_STATE_Configured;

@@ -98,6 +98,8 @@
 			bool setup: 1;
 			bool in: 1;
 			bool out: 1;
+			bool preparedRead: 1;
+			bool preparedWrite: 1;
 		} Endpoint_flags_t;
 		
 		
@@ -162,7 +164,7 @@
 			
 			void Endpoint_prepare_write(uint32_t size);
 			void Endpoint_complete_write();
-			uint32_t Endpoint_Write_buf(uint8_t *buf, uint32_t size);
+			uint32_t Endpoint_write_buf(uint8_t *buf, uint32_t size);
 		
 			/** Configures the specified endpoint number with the given endpoint type, direction, bank size
 			 *  and banking mode. Once configured, the endpoint may be read from or written to, depending
@@ -389,6 +391,7 @@
 			static inline void Endpoint_ClearSETUP(void) ATTR_ALWAYS_INLINE;
 			static inline void Endpoint_ClearSETUP(void)
 			{
+				Endpoint_complete_read();
 				Endpoint_flags[USB_SelectedEndpoint].setup = 0;
 			}
 
@@ -400,6 +403,9 @@
 			static inline void Endpoint_ClearIN(void) ATTR_ALWAYS_INLINE;
 			static inline void Endpoint_ClearIN(void)
 			{
+				if (!Endpoint_flags[USB_SelectedEndpoint].preparedRead){
+					Endpoint_prepare_read();
+				}
 				Endpoint_complete_read();
 				Endpoint_flags[USB_SelectedEndpoint].in = 0;
 			}
@@ -412,6 +418,9 @@
 			static inline void Endpoint_ClearOUT(void) ATTR_ALWAYS_INLINE;
 			static inline void Endpoint_ClearOUT(void)
 			{
+				if (!Endpoint_flags[USB_SelectedEndpoint].preparedWrite){
+					Endpoint_prepare_write(0);
+				}
 				Endpoint_complete_write();
 				Endpoint_flags[USB_SelectedEndpoint].out = 0;
 			}
@@ -503,7 +512,9 @@
 			static inline void Endpoint_Write_8(const uint8_t Data) ATTR_ALWAYS_INLINE;
 			static inline void Endpoint_Write_8(const uint8_t Data)
 			{
-				 //TODO
+				 Endpoint_prepare_write(1);
+				 Endpoint_write_buf(&Data, 1);
+				 Endpoint_complete_write();
 			}
 
 			/** Discards one byte from the currently selected endpoint's bank, for OUT direction endpoints.
@@ -559,23 +570,10 @@
 			 */
 			static inline void Endpoint_Write_16_LE(const uint16_t Data) ATTR_ALWAYS_INLINE;
 			static inline void Endpoint_Write_16_LE(const uint16_t Data)
-			{
-				Endpoint_Write_8(Data >> 8);
-				Endpoint_Write_8(Data & 0xFF);
-			}
-
-			/** Writes two bytes to the currently selected endpoint's bank in big endian format, for IN
-			 *  direction endpoints.
-			 *
-			 *  \ingroup Group_EndpointPrimitiveRW_UC3
-			 *
-			 *  \param[in] Data  Data to write to the currently selected endpoint's FIFO buffer.
-			 */
-			static inline void Endpoint_Write_16_BE(const uint16_t Data) ATTR_ALWAYS_INLINE;
-			static inline void Endpoint_Write_16_BE(const uint16_t Data)
-			{
-				Endpoint_Write_8(Data & 0xFF);
-				Endpoint_Write_8(Data >> 8);
+			{	
+				Endpoint_prepare_write(2);
+				Endpoint_write_buf(&Data, 2);
+				Endpoint_complete_write();
 			}
 
 			/** Discards two bytes from the currently selected endpoint's bank, for OUT direction endpoints.
@@ -674,7 +672,11 @@
 				Dummy = Endpoint_Read_8();
 			}
 
-
+		/** Completes the status stage of a control transfer on a CONTROL type endpoint automatically,
+			 *  with respect to the data direction. This is a convenience function which can be used to
+			 *  simplify user control request handling.
+			 */
+			void Endpoint_ClearStatusStage(void);
 
 		/* External Variables: */
 			/** Global indicating the maximum packet size of the default control endpoint located at address

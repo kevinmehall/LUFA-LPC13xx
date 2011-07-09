@@ -66,21 +66,21 @@ void Endpoint_ClearStatusStage(void)
 {
 	if (USB_ControlRequest.bmRequestType & REQDIR_DEVICETOHOST)
 	{
-		while (!(Endpoint_IsOUTReceived()))
-		{
-			if (USB_DeviceState == DEVICE_STATE_Unattached)
-			  return;
-		}
+		//while (!(Endpoint_IsOUTReceived()))
+		//{
+		//	if (USB_DeviceState == DEVICE_STATE_Unattached)
+		//	  return;
+		//}
 
 		Endpoint_ClearOUT();
 	}
 	else
 	{
-		while (!(Endpoint_IsINReady()))
-		{
-			if (USB_DeviceState == DEVICE_STATE_Unattached)
-			  return;
-		}
+		//while (!(Endpoint_IsINReady()))
+		//{
+		//	if (USB_DeviceState == DEVICE_STATE_Unattached)
+		//	  return;
+		//}
 
 		Endpoint_ClearIN();
 	}
@@ -133,6 +133,10 @@ uint8_t Endpoint_WaitUntilReady(void)
 
 uint32_t Endpoint_Read_buf(uint8_t *buf, uint32_t size)
 {
+	if (Endpoint_flags[USB_SelectedEndpoint].preparedRead){
+		Endpoint_prepare_read();
+	}
+	
 	uint32_t cnt;
 
 	do 
@@ -153,6 +157,7 @@ uint32_t Endpoint_Read_buf(uint8_t *buf, uint32_t size)
 void Endpoint_prepare_read(){
 	USB_CTRL = ((USB_SelectedEndpoint & 0x0F) << 2) | CTRL_RD_EN;
 	__asm("nop"); __asm("nop"); __asm("nop"); __asm("nop"); __asm("nop");
+	Endpoint_flags[USB_SelectedEndpoint].preparedRead = 1;
 }
 
 void Endpoint_complete_read(){
@@ -162,17 +167,21 @@ void Endpoint_complete_read(){
 	{   /* Iso endpoints are cleared on SOF */
 		WriteEndpointCommand(USB_SelectedEndpoint, CMD_CLR_BUF);
 	}
+	
+	Endpoint_flags[USB_SelectedEndpoint].preparedRead = 0;
 }
 
 void Endpoint_prepare_write(uint32_t size){
 	USB_CTRL = ((USB_SelectedEndpoint & 0x0F) << 2) | CTRL_WR_EN;
 	__asm("nop"); __asm("nop"); __asm("nop"); __asm("nop"); __asm("nop");
 	USB_TXPLEN = size;
+	Endpoint_flags[USB_SelectedEndpoint].preparedWrite = 1;
 }
 
 void Endpoint_complete_write(){
 	USB_CTRL = 0;
 	WriteEndpointCommand(USB_SelectedEndpoint|0x80, CMD_VALID_BUF);
+	Endpoint_flags[USB_SelectedEndpoint].preparedWrite = 0;
 }
 
 uint32_t Endpoint_write_buf(uint8_t *buf, uint32_t size) 
