@@ -42,7 +42,7 @@
 #define __USBTASK_H__
 
 	/* Includes: */
-		#include "../../../Common/Common.h"
+		#include "../Common/Common.h"
 		#include "USBMode.h"		
 		#include "USBController.h"
 		#include "Events.h"

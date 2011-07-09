@@ -50,7 +50,7 @@
 #define __STDREQTYPE_H__
 
 	/* Includes: */
-		#include "../../../Common/Common.h"
+		#include "../Common/Common.h"
 		#include "USBMode.h"		
 
 	/* Preprocessor Checks: */
