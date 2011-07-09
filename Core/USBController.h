@@ -61,7 +61,9 @@
 		#if (ARCH == ARCH_AVR8)
 			#include "AVR8/USBController_AVR8.h"
 		#elif (ARCH == ARCH_UC3)
-			#include "UC3/USBController_UC3.h"	
+			#include "UC3/USBController_UC3.h"
+		#elif (ARCH == ARCH_LPC13xx)
+			#include "LPC13xx/USBController_LPC13xx.h"
 		#endif
 
 #endif

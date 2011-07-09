@@ -103,6 +103,8 @@
 			#include "AVR8/Endpoint_AVR8.h"
 		#elif (ARCH == ARCH_UC3)
 			#include "UC3/Endpoint_UC3.h"
+		#elif (ARCH == ARCH_LPC13xx)
+			#include "LPC13xx/Endpoint_LPC13xx.h"
 		#endif
 
 #endif

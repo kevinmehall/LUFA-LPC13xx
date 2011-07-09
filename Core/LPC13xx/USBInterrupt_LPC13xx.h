@@ -29,7 +29,7 @@
 */
 
 /** \file
- *  \brief USB controller interrupt service routine management.
+ *  \brief USB Controller Interrupt definitions for the AVR32 UC3 microcontrollers.
  *
  *  This file contains definitions required for the correct handling of low level USB service routine interrupts
  *  from the USB controller.
@@ -38,25 +38,45 @@
  *        dispatch header located in LUFA/Drivers/USB/USB.h.
  */
 
-#ifndef __USBINTERRUPT_H__
-#define __USBINTERRUPT_H__
+#ifndef __USBINTERRUPT_UC3_H__
+#define __USBINTERRUPT_UC3_H__
 
 	/* Includes: */
-		#include "../Common/Common.h"
-		#include "USBMode.h"		
-		
+		#include "../../Common/Common.h"
+
+	/* Enable C linkage for C++ Compilers: */
+		#if defined(__cplusplus)
+			extern "C" {
+		#endif
+
 	/* Preprocessor Checks: */
 		#if !defined(__INCLUDE_FROM_USB_DRIVER)
 			#error Do not include this file directly. Include LUFA/Drivers/USB/USB.h instead.
 		#endif
 
-	/* Architecture Includes: */
-		#if (ARCH == ARCH_AVR8)
-			#include "AVR8/USBInterrupt_AVR8.h"
-		#elif (ARCH == ARCH_UC3)
-			#include "UC3/USBInterrupt_UC3.h"
-		#elif (ARCH == ARCH_LPC13xx)
-			#include "LPC13xx/USBInterrupt_LPC13xx.h"
+	/* Private Interface - For use in library only: */
+	#if !defined(__DOXYGEN__)		
+			#include "../USBMode.h"
+			#include "../Events.h"
+			#include "../USBController.h"
+
+	#endif
+
+	/* Public Interface - May be used in end-application: */
+		/* ISR Prototypes: */
+			#if defined(__DOXYGEN__)
+				/** Interrupt service routine handler for the USB controller ISR group. This interrupt routine <b>must</b> be
+				 *  linked to the entire USB controller ISR vector group inside the AVR32's interrupt controller peripheral,
+				 *  using the user application's preferred USB controller driver.
+				 */
+				void USB_GEN_vect(void);
+			#else
+				ISR(USB_GEN_vect);
+			#endif
+			
+	/* Disable C linkage for C++ Compilers: */
+		#if defined(__cplusplus)
+			}
 		#endif
 
 #endif

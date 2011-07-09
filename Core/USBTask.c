@@ -43,6 +43,8 @@ volatile uint8_t     USB_HostState;
 volatile uint8_t     USB_DeviceState;
 #endif
 
+#define USB_DEVICE_ONLY
+
 void USB_USBTask(void)
 {
 	#if defined(USB_HOST_ONLY)

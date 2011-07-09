@@ -48,11 +48,19 @@ bool    USB_RemoteWakeupEnabled;
 
 void USB_Device_ProcessControlRequest(void)
 {
+
+#if 0
 	USB_ControlRequest.bmRequestType = Endpoint_Read_8();
 	USB_ControlRequest.bRequest      = Endpoint_Read_8();
 	USB_ControlRequest.wValue        = Endpoint_Read_16_LE();
 	USB_ControlRequest.wIndex        = Endpoint_Read_16_LE();
 	USB_ControlRequest.wLength       = Endpoint_Read_16_LE();
+#else
+	Endpoint_SelectEndpoint(ENDPOINT_CONTROLEP);
+	Endpoint_prepare_read();
+	Endpoint_Read_buf(&USB_ControlRequest, sizeof(USB_ControlRequest));
+	Endpoint_complete_read();
+#endif
 
 	EVENT_USB_Device_ControlRequest();
 
@@ -119,10 +127,13 @@ static void USB_Device_SetAddress(void)
 	GlobalInterruptDisable();
 				
 	Endpoint_ClearSETUP();
+	
+	Endpoint_prepare_write(0);
+	
+	//Endpoint_ClearStatusStage();
+	Endpoint_complete_write();
 
-	Endpoint_ClearStatusStage();
-
-	while (!(Endpoint_IsINReady()));
+	//while (!(Endpoint_IsINReady()));
 
 	USB_Device_SetDeviceAddress(DeviceAddress);
 	USB_DeviceState = (DeviceAddress) ? DEVICE_STATE_Addressed : DEVICE_STATE_Default;
@@ -257,9 +268,15 @@ static void USB_Device_GetDescriptor(void)
 	}
 
 	Endpoint_ClearSETUP();
+	
+	if (DescriptorSize > USB_ControlRequest.wLength)
+	  DescriptorSize = USB_ControlRequest.wLength;
+	
+	Endpoint_prepare_write(DescriptorSize);
+	Endpoint_write_buf(DescriptorPointer, DescriptorSize);
 
 	#if defined(USE_RAM_DESCRIPTORS) || !defined(ARCH_HAS_MULTI_ADDRESS_SPACE)
-	Endpoint_Write_Control_Stream_LE(DescriptorPointer, DescriptorSize);
+	//Endpoint_Write_Control_Stream_LE(DescriptorPointer, DescriptorSize);
 	#elif defined(USE_EEPROM_DESCRIPTORS)
 	Endpoint_Write_Control_EStream_LE(DescriptorPointer, DescriptorSize);
 	#elif defined(USE_FLASH_DESCRIPTORS)

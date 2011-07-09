@@ -123,6 +123,11 @@
 		#define USB_CAN_BE_BOTH
 	#else
 		/* Macros: */
+		
+			#if ARCH == ARCH_LPC13xx
+				#define USB_CAN_BE_DEVICE
+			#endif
+		
 			#if (defined(__AVR_AT90USB162__) || defined(__AVR_AT90USB82__)  || \
 			     defined(__AVR_ATmega32U2__) || defined(__AVR_ATmega16U2__) || defined(__AVR_ATmega8U2__))
 				#define USB_SERIES_2_AVR

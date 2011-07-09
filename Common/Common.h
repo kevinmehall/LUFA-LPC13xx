@@ -109,6 +109,17 @@
 			#define ARCH_BIG_ENDIAN
 
 			#include "Endianness.h"
+		#elif (ARCH == ARCH_LPC13xx)
+			// === TODO: Find abstracted way to handle these ===
+			#define PROGMEM                  const
+			#define pgm_read_byte(x)         *x
+			#define memcmp_P(...)            memcmp(__VA_ARGS__)
+			#define memcpy_P(...)            memcpy(__VA_ARGS__)
+			
+			typedef uint32_t uint_reg_t;
+			#define ARCH_LITTLE_ENDIAN
+
+			#include "Endianness.h"
 		#else
 			#error Unknown device architecture specified.
 		#endif
@@ -323,7 +334,9 @@
 				#if (ARCH == ARCH_AVR8)
 				return SREG;
 				#elif (ARCH == ARCH_UC3)
-				return __builtin_mfsr(AVR32_SR);				
+				return __builtin_mfsr(AVR32_SR);
+				#elif (ARCH == ARCH_LPC13xx)
+				return 0;
 				#endif
 
 				GCC_MEMORY_BARRIER();

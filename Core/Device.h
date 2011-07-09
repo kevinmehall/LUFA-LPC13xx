@@ -139,6 +139,8 @@
 			#include "AVR8/Device_AVR8.h"
 		#elif (ARCH == ARCH_UC3)
 			#include "UC3/Device_UC3.h"
+		#elif (ARCH == ARCH_LPC13xx)
+			#include "LPC13xx/Device_LPC13xx.h"
 		#endif
 
 #endif

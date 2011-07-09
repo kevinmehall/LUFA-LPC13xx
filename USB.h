@@ -366,11 +366,12 @@
 		#include "Core/USBTask.h"
 		#include "Core/Events.h"
 		#include "Core/StdDescriptors.h"
-		#include "Core/ConfigDescriptor.h"
 		#include "Core/USBController.h"
 		#include "Core/USBInterrupt.h"
 
 		#if defined(USB_CAN_BE_HOST) || defined(__DOXYGEN__)
+			#error "Can't be host"
+			#include "Core/ConfigDescriptor.h"
 			#include "Core/Host.h"
 			#include "Core/Pipe.h"
 			#include "Core/HostStandardReq.h"
@@ -388,6 +389,7 @@
 			#include "Core/OTG.h"
 		#endif
 		
+		#if 0
 		#include "Class/Audio.h"
 		#include "Class/CDC.h"
 		#include "Class/HID.h"
@@ -396,6 +398,7 @@
 		#include "Class/Printer.h"
 		#include "Class/RNDIS.h"
 		#include "Class/StillImage.h"
+		#endif
 
 #endif
 
