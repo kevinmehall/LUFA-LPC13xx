@@ -170,6 +170,7 @@
 			 *  by defining the INTERRUPT_CONTROL_ENDPOINT token and passing it to the compiler via the -D switch.
 			 *
 			 *  \see \ref Group_Events for more information on the USB events.
+
 			 *
 			 *  \ingroup Group_USBManagement
 			 */
