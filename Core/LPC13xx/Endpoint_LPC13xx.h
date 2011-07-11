@@ -164,61 +164,8 @@
 			
 			void Endpoint_prepare_write(uint32_t size);
 			void Endpoint_complete_write();
-			uint32_t Endpoint_write_buf(uint8_t *buf, uint32_t size);
+			uint32_t Endpoint_write_buf(const uint8_t *buf, uint32_t size);
 		
-			/** Configures the specified endpoint number with the given endpoint type, direction, bank size
-			 *  and banking mode. Once configured, the endpoint may be read from or written to, depending
-			 *  on its direction.
-			 *
-			 *  \param[in] Number     Endpoint number to configure. This must be more than 0 and less than
-			 *                        \ref ENDPOINT_TOTAL_ENDPOINTS.
-			 *
-			 *  \param[in] Type       Type of endpoint to configure, a \c EP_TYPE_* mask. Not all endpoint types
-			 *                        are available on Low Speed USB devices - refer to the USB 2.0 specification.
-			 *
-			 *  \param[in] Direction  Endpoint data direction, either \ref ENDPOINT_DIR_OUT or \ref ENDPOINT_DIR_IN.
-			 *                        All endpoints (except Control type) are unidirectional - data may only be read
-			 *                        from or written to the endpoint bank based on its direction, not both.
-			 *
-			 *  \param[in] Size       Size of the endpoint's bank, where packets are stored before they are transmitted
-			 *                        to the USB host, or after they have been received from the USB host (depending on
-			 *                        the endpoint's data direction). The bank size must indicate the maximum packet size
-			 *                        that the endpoint can handle.
-			 *
-			 *  \param[in] Banks      Number of banks to use for the endpoint being configured, an \c ENDPOINT_BANK_* mask.
-			 *                        More banks uses more USB DPRAM, but offers better performance. Isochronous type
-			 *                        endpoints <b>must</b> have at least two banks.
-			 *
-			 *  \note When the \c ORDERED_EP_CONFIG compile time option is used, Endpoints <b>must</b> be configured in
-			 *        ascending order, or bank corruption will occur.
-			 *        \n\n
-			 *
-			 *  \note Different endpoints may have different maximum packet sizes based on the endpoint's index - refer to
-			 *        the chosen microcontroller model's datasheet to determine the maximum bank size for each endpoint.
-			 *        \n\n
-			 *
-			 *  \note The default control endpoint should not be manually configured by the user application, as
-			 *        it is automatically configured by the library internally.
-			 *        \n\n
-			 *
-			 *  \note This routine will automatically select the specified endpoint upon success. Upon failure, the endpoint
-			 *        which failed to reconfigure correctly will be selected.
-			 *
-			 *  \return Boolean \c true if the configuration succeeded, \c false otherwise.
-			 */
-			static inline bool Endpoint_ConfigureEndpoint(const uint8_t Number,
-			                                              const uint8_t Type,
-			                                              const uint8_t Direction,
-			                                              const uint16_t Size,
-			                                              const uint8_t Banks) ATTR_ALWAYS_INLINE;
-			static inline bool Endpoint_ConfigureEndpoint(const uint8_t Number,
-			                                              const uint8_t Type,
-			                                              const uint8_t Direction,
-			                                              const uint16_t Size,
-			                                              const uint8_t Banks)
-			{
-				return false; //Endpoint_ConfigureEndpoint_Prv(Number, ();
-			}
 
 			/** Indicates the number of bytes currently stored in the current endpoint's selected bank.
 			 *
@@ -260,6 +207,7 @@
 			static inline void Endpoint_SelectEndpoint(const uint8_t EndpointNumber)
 			{
 				USB_SelectedEndpoint = EndpointNumber;
+				USB_CTRL = 0;
 			}
 
 			/** Resets the endpoint bank FIFO. This clears all the endpoint banks and resets the USB controller's
@@ -353,7 +301,7 @@
 			static inline bool Endpoint_IsINReady(void) ATTR_WARN_UNUSED_RESULT ATTR_ALWAYS_INLINE;
 			static inline bool Endpoint_IsINReady(void)
 			{
-				return Endpoint_flags[USB_SelectedEndpoint].in;
+				return Endpoint_flags[USB_SelectedEndpoint].in; //&& !(ReadCommandData(DAT_SEL_EP_CLRI(EndpointAddress(USB_SelectedEndpoint|0x80))) & EP_SEL_F);
 			}
 
 			/** Determines if the selected OUT endpoint has received new packet from the host.
@@ -403,10 +351,10 @@
 			static inline void Endpoint_ClearIN(void) ATTR_ALWAYS_INLINE;
 			static inline void Endpoint_ClearIN(void)
 			{
-				if (!Endpoint_flags[USB_SelectedEndpoint].preparedRead){
-					Endpoint_prepare_read();
+				if (!Endpoint_flags[USB_SelectedEndpoint].preparedWrite){
+					Endpoint_prepare_write(0);
 				}
-				Endpoint_complete_read();
+				Endpoint_complete_write();
 				Endpoint_flags[USB_SelectedEndpoint].in = 0;
 			}
 
@@ -418,10 +366,10 @@
 			static inline void Endpoint_ClearOUT(void) ATTR_ALWAYS_INLINE;
 			static inline void Endpoint_ClearOUT(void)
 			{
-				if (!Endpoint_flags[USB_SelectedEndpoint].preparedWrite){
-					Endpoint_prepare_write(0);
+				if (!Endpoint_flags[USB_SelectedEndpoint].preparedRead){
+					Endpoint_prepare_read();
 				}
-				Endpoint_complete_write();
+				Endpoint_complete_read();
 				Endpoint_flags[USB_SelectedEndpoint].out = 0;
 			}
 
@@ -443,6 +391,7 @@
 			}
 
 			/** Clears the STALL condition on the currently selected endpoint.
+
 			 *
 			 *  \ingroup Group_EndpointPacketManagement_LPC13xx
 			 */
@@ -514,7 +463,6 @@
 			{
 				 Endpoint_prepare_write(1);
 				 Endpoint_write_buf(&Data, 1);
-				 Endpoint_complete_write();
 			}
 
 			/** Discards one byte from the currently selected endpoint's bank, for OUT direction endpoints.
@@ -573,7 +521,6 @@
 			{	
 				Endpoint_prepare_write(2);
 				Endpoint_write_buf(&Data, 2);
-				Endpoint_complete_write();
 			}
 
 			/** Discards two bytes from the currently selected endpoint's bank, for OUT direction endpoints.
@@ -677,6 +624,76 @@
 			 *  simplify user control request handling.
 			 */
 			void Endpoint_ClearStatusStage(void);
+			
+					/** Configures the specified endpoint number with the given endpoint type, direction, bank size
+			 *  and banking mode. Once configured, the endpoint may be read from or written to, depending
+			 *  on its direction.
+			 *
+
+			 *  \param[in] Number     Endpoint number to configure. This must be more than 0 and less than
+			 *                        \ref ENDPOINT_TOTAL_ENDPOINTS.
+
+			 *
+			 *  \param[in] Type       Type of endpoint to configure, a \c EP_TYPE_* mask. Not all endpoint types
+			 *                        are available on Low Speed USB devices - refer to the USB 2.0 specification.
+			 *
+			 *  \param[in] Direction  Endpoint data direction, either \ref ENDPOINT_DIR_OUT or \ref ENDPOINT_DIR_IN.
+			 *                        All endpoints (except Control type) are unidirectional - data may only be read
+			 *                        from or written to the endpoint bank based on its direction, not both.
+			 *
+			 *  \param[in] Size       Size of the endpoint's bank, where packets are stored before they are transmitted
+			 *                        to the USB host, or after they have been received from the USB host (depending on
+			 *                        the endpoint's data direction). The bank size must indicate the maximum packet size
+			 *                        that the endpoint can handle.
+
+			 *
+			 *  \param[in] Banks      Number of banks to use for the endpoint being configured, an \c ENDPOINT_BANK_* mask.
+			 *                        More banks uses more USB DPRAM, but offers better performance. Isochronous type
+			 *                        endpoints <b>must</b> have at least two banks.
+			 *
+
+			 *  \note When the \c ORDERED_EP_CONFIG compile time option is used, Endpoints <b>must</b> be configured in
+			 *        ascending order, or bank corruption will occur.
+			 *        \n\n
+			 *
+
+			 *  \note Different endpoints may have different maximum packet sizes based on the endpoint's index - refer to
+
+			 *        the chosen microcontroller model's datasheet to determine the maximum bank size for each endpoint.
+
+			 *        \n\n
+			 *
+
+			 *  \note The default control endpoint should not be manually configured by the user application, as
+			 *        it is automatically configured by the library internally.
+
+			 *        \n\n
+
+			 *
+
+			 *  \note This routine will automatically select the specified endpoint upon success. Upon failure, the endpoint
+
+			 *        which failed to reconfigure correctly will be selected.
+
+			 *
+
+			 *  \return Boolean \c true if the configuration succeeded, \c false otherwise.
+			 */
+			static inline bool Endpoint_ConfigureEndpoint(const uint8_t Number,
+			                                              const uint8_t Type,
+			                                              const uint8_t Direction,
+			                                              const uint16_t Size,
+			                                              const uint8_t Banks) ATTR_ALWAYS_INLINE;
+			static inline bool Endpoint_ConfigureEndpoint(const uint8_t Number,
+			                                              const uint8_t Type,
+			                                              const uint8_t Direction,
+			                                              const uint16_t Size,
+			                                              const uint8_t Banks)
+			{
+				Endpoint_SelectEndpoint(Number);
+				Endpoint_EnableEndpoint();
+				return Endpoint_IsConfigured();
+			}
 
 		/* External Variables: */
 			/** Global indicating the maximum packet size of the default control endpoint located at address

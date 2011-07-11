@@ -198,6 +198,7 @@ static void USB_Device_SetConfiguration(void)
 	//Endpoint_ClearStatusStage();
 	Endpoint_prepare_write(0);
 	Endpoint_complete_write();
+	WriteCommandData(CMD_CFG_DEV, DAT_WR_BYTE(1));
 
 	if (USB_ConfigurationNumber)
 	  USB_DeviceState = DEVICE_STATE_Configured;
@@ -290,7 +291,7 @@ static void USB_Device_GetDescriptor(void)
 	  Endpoint_Write_Control_Stream_LE(DescriptorPointer, DescriptorSize);
 	#endif
 
-	Endpoint_ClearOUT();
+	Endpoint_ClearIN();
 }
 
 static void USB_Device_GetStatus(void)

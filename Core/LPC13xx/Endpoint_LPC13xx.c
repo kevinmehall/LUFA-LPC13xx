@@ -43,15 +43,6 @@ uint8_t USB_ControlEndpointSize = ENDPOINT_CONTROLEP_DEFAULT_SIZE;
 volatile uint32_t USB_SelectedEndpoint = ENDPOINT_CONTROLEP;
 volatile Endpoint_flags_t Endpoint_flags[USB_EP_NUM];
 
-bool Endpoint_ConfigureEndpoint_Prv(const uint8_t Number,
-                                    const uint32_t UECFG0Data)
-{
-	Endpoint_SelectEndpoint(Number);
-	Endpoint_EnableEndpoint();
-
-
-	return Endpoint_IsConfigured();
-}
 
 void Endpoint_ClearEndpoints(void)
 {
@@ -156,7 +147,7 @@ uint32_t Endpoint_Read_buf(uint8_t *buf, uint32_t size)
 
 void Endpoint_prepare_read(){
 	USB_CTRL = ((USB_SelectedEndpoint & 0x0F) << 2) | CTRL_RD_EN;
-	__asm("nop"); __asm("nop"); __asm("nop"); __asm("nop"); __asm("nop");
+	__asm("nop"); __asm("nop"); __asm("nop"); __asm("nop"); __asm("nop"); __asm("nop"); __asm("nop");
 	Endpoint_flags[USB_SelectedEndpoint].preparedRead = 1;
 }
 
@@ -173,7 +164,7 @@ void Endpoint_complete_read(){
 
 void Endpoint_prepare_write(uint32_t size){
 	USB_CTRL = ((USB_SelectedEndpoint & 0x0F) << 2) | CTRL_WR_EN;
-	__asm("nop"); __asm("nop"); __asm("nop"); __asm("nop"); __asm("nop");
+	__asm("nop"); __asm("nop"); __asm("nop"); __asm("nop"); __asm("nop"); __asm("nop"); __asm("nop");
 	USB_TXPLEN = size;
 	Endpoint_flags[USB_SelectedEndpoint].preparedWrite = 1;
 }
@@ -184,7 +175,7 @@ void Endpoint_complete_write(){
 	Endpoint_flags[USB_SelectedEndpoint].preparedWrite = 0;
 }
 
-uint32_t Endpoint_write_buf(uint8_t *buf, uint32_t size) 
+uint32_t Endpoint_write_buf(const uint8_t *buf, uint32_t size) 
 {
 	uint32_t n;
 
