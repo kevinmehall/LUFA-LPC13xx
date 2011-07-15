@@ -124,7 +124,7 @@ uint8_t Endpoint_WaitUntilReady(void)
 
 uint32_t Endpoint_Read_buf(uint8_t *buf, uint32_t size)
 {
-	if (Endpoint_flags[USB_SelectedEndpoint].preparedRead){
+	if (!Endpoint_flags[USB_SelectedEndpoint].preparedRead){
 		Endpoint_prepare_read();
 	}
 	
@@ -177,6 +177,9 @@ void Endpoint_complete_write(){
 
 uint32_t Endpoint_write_buf(const uint8_t *buf, uint32_t size) 
 {
+	if (!Endpoint_flags[USB_SelectedEndpoint].preparedWrite){
+		Endpoint_prepare_write(size);
+	}
 	uint32_t n;
 
 	for (n = 0; n < (size + 3) / 4; n++) 

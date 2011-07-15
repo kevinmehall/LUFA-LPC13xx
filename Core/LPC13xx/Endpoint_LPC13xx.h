@@ -582,10 +582,8 @@
 			static inline void Endpoint_Write_32_LE(const uint32_t Data) ATTR_ALWAYS_INLINE;
 			static inline void Endpoint_Write_32_LE(const uint32_t Data)
 			{
-				Endpoint_Write_8(Data >> 24);
-				Endpoint_Write_8(Data >> 16);
-				Endpoint_Write_8(Data >> 8);
-				Endpoint_Write_8(Data &  0xFF);
+				Endpoint_prepare_write(4);
+				Endpoint_write_buf(&Data, 4);
 			}
 
 			/** Writes four bytes to the currently selected endpoint's bank in big endian format, for IN
@@ -692,6 +690,7 @@
 			{
 				Endpoint_SelectEndpoint(Number);
 				Endpoint_EnableEndpoint();
+				Endpoint_flags[Number].in = 1;
 				return Endpoint_IsConfigured();
 			}
 
