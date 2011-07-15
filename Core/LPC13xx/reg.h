@@ -1,4 +1,4 @@
-#include "../../../lpc134x.h"
+#include "lpc134x.h"
 
 
 #ifndef __USBREG_LPC13xx_H__
