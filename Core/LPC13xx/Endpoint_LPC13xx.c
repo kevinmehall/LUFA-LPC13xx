@@ -167,6 +167,9 @@ void Endpoint_prepare_write(uint32_t size){
 	__asm("nop"); __asm("nop"); __asm("nop"); __asm("nop"); __asm("nop"); __asm("nop"); __asm("nop");
 	USB_TXPLEN = size;
 	Endpoint_flags[USB_SelectedEndpoint].preparedWrite = 1;
+	if (size == 0){
+		USB_TXDATA = 0;
+	}
 }
 
 void Endpoint_complete_write(){
